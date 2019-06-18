@@ -1,1 +1,1 @@
-# Add-Common-Image-Corruptions
+# add-common-image-corruptions
