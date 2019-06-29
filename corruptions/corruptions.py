@@ -200,6 +200,7 @@ def defocus_blur(x, severity=1):
 
 
 def motion_blur(x, severity=1):
+    shape = np.array(x).shape
     c = [(10, 3), (15, 5), (15, 8), (15, 12), (20, 15)][severity - 1]
 
     output = BytesIO()
@@ -214,7 +215,11 @@ def motion_blur(x, severity=1):
                      cv2.IMREAD_UNCHANGED)
 
     if len(x.shape) < 3 or x.shape[2] < 3:
-        return np.clip(np.array(x).transpose((0, 1)), 0, 255)
+        gray = np.clip(np.array(x).transpose((0, 1)), 0, 255)
+        if len(shape) >= 3 or shape[2] >=3:
+            return np.stack([gray, gray, gray], axis=2)
+        else:
+            return gray
     else:
         return np.clip(x[..., [2, 1, 0]], 0, 255)  # BGR to RGB
 
@@ -296,11 +301,11 @@ def frost(x, severity=1):
 
     # resize the frost image so it fits to the image dimensions
     scaling_factor = 1
-    if frost_shape[0] > x_shape[0] and frost_shape[1] > x_shape[1]:
+    if frost_shape[0] >= x_shape[0] and frost_shape[1] >= x_shape[1]:
         scaling_factor = 1
-    elif frost_shape[0] < x_shape[0] and frost_shape[1] > x_shape[1]:
+    elif frost_shape[0] < x_shape[0] and frost_shape[1] >= x_shape[1]:
         scaling_factor = x_shape[0] / frost_shape[0]
-    elif frost_shape[0] > x_shape[0] and frost_shape[1] < x_shape[1]:
+    elif frost_shape[0] >= x_shape[0] and frost_shape[1] < x_shape[1]:
         scaling_factor = x_shape[1] / frost_shape[1]
     elif frost_shape[0] < x_shape[0] and frost_shape[1] < x_shape[
         1]:  # If both dims are too small, pick the bigger scaling factor
