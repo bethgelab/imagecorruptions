@@ -29,19 +29,3 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
 )
-
-
-import skimage as sk
-from skimage.filters import gaussian
-from io import BytesIO
-from wand.image import Image as WandImage
-from wand.api import library as wandlibrary
-import wand.color as WandColor
-import ctypes
-from PIL import Image as PILImage
-import cv2
-from scipy.ndimage import zoom as scizoom
-from scipy.ndimage.interpolation import map_coordinates
-import warnings
-import os
-from pkg_resources import resource_filename
