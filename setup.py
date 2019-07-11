@@ -18,7 +18,6 @@ setuptools.setup(
           'numpy',
           'Pillow',
           'scikit-image',
-          'wand',
           'opencv-python',
           'scipy',
       ],
