@@ -37,3 +37,6 @@ def corrupt(x, severity=1, corruption_name=None, corruption_number=-1):
         raise ValueError("Either corruption_name or corruption_number must be passed")
 
     return np.uint8(x_corrupted)
+
+def get_corruption_names():
+    return [f.__name__ for f in corruption_tuple]
