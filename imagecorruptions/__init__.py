@@ -38,5 +38,12 @@ def corrupt(x, severity=1, corruption_name=None, corruption_number=-1):
 
     return np.uint8(x_corrupted)
 
-def get_corruption_names():
-    return [f.__name__ for f in corruption_tuple]
+def get_corruption_names(subset='common'):
+    if subset == 'common':
+        return [f.__name__ for f in corruption_tuple[:15]]
+    elif subset == 'validation':
+        return [f.__name__ for f in corruption_tuple[15:]]
+    elif subset == 'all':
+        return [f.__name__ for f in corruption_tuple]
+    else:
+        raise ValueError("subset must be one of ['common', 'validation', 'all']")
