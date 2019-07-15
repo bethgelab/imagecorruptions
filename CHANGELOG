@@ -1,0 +1,4 @@
+# Changes in Version 1.0.0:
+- all corruption functions accept images with arbitrary dimensions and aspect ratios
+- corruption functions that convert the image to a byte-object will now also work for grayscale images
+- reimplemented motion_blur and snow corruptions to remove the libmagickwand dependency
