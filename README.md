@@ -29,5 +29,21 @@ for i in range(15):
 
 Note that the first 15 image corruptions are the common corruptions (the ones you get via `get_corruption_names()`). If you really wish to use these as data augmentation, there exist four additional validation corruptions which can be accessed via `get_corruption_names('validation')` which should then be used to test the corruption robustness of the trained model.
 
+## Citation
+
+If you use our code or the imagecorruptions package, please consider citing:
+```
+@article{michaelis2019dragon,
+  title={Benchmarking Robustness in Object Detection: 
+    Autonomous Driving when Winter is Coming},
+  author={Michaelis, Claudio and Mitzkus, Benjamin and 
+    Geirhos, Robert and Rusak, Evgenia and 
+    Bringmann, Oliver and Ecker, Alexander S. and 
+    Bethge, Matthias and Brendel, Wieland},
+  journal={arXiv},
+  year={2019}
+}
+```
+
 ## Credit and Changelog
 This package is an extension of the image corruption functions provided by Dan Hendrycks in the repository  [corruptions](https://github.com/hendrycks/robustness). The image corruptions implemented by Hendrycks are generalized to work on images with arbitrary image dimensions and aspect ratios aswell as on grayscale images. We furthermore removed the dependency to `libmagickwand` and the python api `Wand` and reimplemented the `motion_blur` in python.
