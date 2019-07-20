@@ -40,7 +40,7 @@ If you use our code or the imagecorruptions package, please consider citing:
     Geirhos, Robert and Rusak, Evgenia and 
     Bringmann, Oliver and Ecker, Alexander S. and 
     Bethge, Matthias and Brendel, Wieland},
-  journal={arXiv},
+  journal={arXiv preprint arXiv:1907.07484},
   year={2019}
 }
 ```
