@@ -117,20 +117,20 @@ def getMotionBlurKernel(width, sigma):
 
 def shift(image, dx, dy):
     if(dx < 0):
-        shifted = np.roll(image, shift=image.shape[0]+dx, axis=0)
-        shifted[dx:,:] = shifted[dx-1:dx,:]
+        shifted = np.roll(image, shift=image.shape[1]+dx, axis=1)
+        shifted[:,dx:] = shifted[:,dx-1:dx]
     elif(dx > 0):
-        shifted = np.roll(image, shift=dx, axis=0)
-        shifted[:dx,:] = shifted[dx:dx+1,:]
+        shifted = np.roll(image, shift=dx, axis=1)
+        shifted[:,:dx] = shifted[:,dx:dx+1]
     else:
         shifted = image
 
     if(dy < 0):
-        shifted = np.roll(shifted, shift=image.shape[1]+dy, axis=1)
-        shifted[:,dy:] = shifted[:,dy-1:dy]
+        shifted = np.roll(shifted, shift=image.shape[0]+dy, axis=0)
+        shifted[dy:,:] = shifted[dy-1:dy,:]
     elif(dy > 0):
-        shifted = np.roll(shifted, shift=dy, axis=1)
-        shifted[:,:dy] = shifted[:,dy:dy+1]
+        shifted = np.roll(shifted, shift=dy, axis=0)
+        shifted[:dy,:] = shifted[dy:dy+1,:]
     return shifted
 
 def _motion_blur(x, radius, sigma, angle):
@@ -141,13 +141,14 @@ def _motion_blur(x, radius, sigma, angle):
 
     blurred = np.zeros_like(x, dtype=np.float32)
     for i in range(width):
-        dx = -math.ceil(((i*point[0]) / hypot) - 0.5)
-        dy = -math.ceil(((i*point[1]) / hypot) - 0.5)
+        dy = -math.ceil(((i*point[0]) / hypot) - 0.5)
+        dx = -math.ceil(((i*point[1]) / hypot) - 0.5)
+        if (np.abs(dy) >= x.shape[0] or np.abs(dx) >= x.shape[1]):
+            # simulated motion exceeded image borders
+            break
         shifted = shift(x, dx, dy)
         blurred = blurred + kernel[i] * shifted
-
     return blurred
-
 
 # /////////////// End Corruption Helpers ///////////////
 
