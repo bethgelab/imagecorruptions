@@ -143,11 +143,12 @@ def _motion_blur(x, radius, sigma, angle):
     for i in range(width):
         dx = -math.ceil(((i*point[0]) / hypot) - 0.5)
         dy = -math.ceil(((i*point[1]) / hypot) - 0.5)
+        if (np.abs(dy) >= x.shape[0] or np.abs(dx) >= x.shape[1]):
+            # simulated motion exceeded image borders
+            break
         shifted = shift(x, dx, dy)
         blurred = blurred + kernel[i] * shifted
-
     return blurred
-
 
 # /////////////// End Corruption Helpers ///////////////
 
