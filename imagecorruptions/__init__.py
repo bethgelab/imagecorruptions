@@ -17,7 +17,9 @@ def corrupt(image, severity=1, corruption_name=None, corruption_number=-1):
     
     Args:
         image (numpy.ndarray):      image to corrupt; a numpy array in [0, 255], expected datatype is np.uint8
-                                    expected shape is either (height x width x channels) or (height x width), channels must be 1 or 3
+                                    expected shape is either (height x width x channels) or (height x width); 
+                                    width and height must be at least 32 pixels;
+                                    channels must be 1 or 3;
         severity (int):             strength with which to corrupt the image; an integer in [1, 5]
         corruption_name (str):      specifies which corruption function to call, must be one of
                                         'gaussian_noise', 'shot_noise', 'impulse_noise', 'defocus_blur',
@@ -42,6 +44,9 @@ def corrupt(image, severity=1, corruption_name=None, corruption_number=-1):
         image = np.stack((image,)*3, axis=-1)
     
     height, width, channels = image.shape
+    
+    if (height < 32 or width < 32):
+        raise AttributeError('Image width and height must be at least 32 pixels')
     
     if not (channels in [1,3]):
         raise AttributeError('Expecting image to have either 1 or 3 channels (last dimension)')
