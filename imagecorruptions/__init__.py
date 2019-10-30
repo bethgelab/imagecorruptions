@@ -26,7 +26,7 @@ def corrupt(image, severity=1, corruption_name=None, corruption_number=-1):
                                         'glass_blur', 'motion_blur', 'zoom_blur', 'snow', 'frost', 'fog',
                                         'brightness', 'contrast', 'elastic_transform', 'pixelate', 'jpeg_compression',
                                         'speckle_noise', 'gaussian_blur', 'spatter', 'saturate';
-                                        the last four are validation corruptions
+                                    the last four are validation corruptions
         corruption_number (int):    the position of the corruption_name in the above list; an integer in [0, 18]; 
                                         useful for easy looping; 15, 16, 17, 18 are validation corruption numbers
     Returns:
@@ -39,7 +39,7 @@ def corrupt(image, severity=1, corruption_name=None, corruption_number=-1):
         raise AttributeError('Expecting image.dtype.type to be numpy.uint8')
         
     if not (image.ndim in [2,3]):
-        raise AttributeError('Expecting image.shape to be either (width x height) or (width x height x channels)')
+        raise AttributeError('Expecting image.shape to be either (height x width) or (height x width x channels)')
     if image.ndim == 2:
         image = np.stack((image,)*3, axis=-1)
     
