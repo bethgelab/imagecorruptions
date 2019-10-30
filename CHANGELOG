@@ -1,3 +1,8 @@
+# Changes in Version 1.1.0:
+- docstring updated
+- validation of arguments that are passed to corrupt()
+- bugfix: motion_blur now works on small images
+
 # Changes in Version 1.0.0:
 - all corruption functions accept images with arbitrary dimensions and aspect ratios
 - corruption functions that convert the image to a byte-object will now also work for grayscale images

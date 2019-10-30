@@ -6,7 +6,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="imagecorruptions",
-    version="1.0.0",
+    version="1.1.0",
     author="Evgenia Rusak, Benjamin Mitzkus",
     author_email="evgenia.rusak@bethgelab.org, benjamin.mitzkus@bethgelab.org",
     description="This package provides a set of image corruptions.",
