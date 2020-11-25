@@ -16,7 +16,6 @@ import warnings
 import os
 from pkg_resources import resource_filename
 
-warnings.simplefilter("ignore", UserWarning)
 
 
 def disk(radius, alias_blur=0.1, dtype=np.float32):
