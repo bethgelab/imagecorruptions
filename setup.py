@@ -3,6 +3,10 @@ import setuptools
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
+# Can be used to load install_require
+# with open('requirements.txt', 'r') as freq:
+#     required = freq.read().splitlines()
+
 
 setuptools.setup(
     name="imagecorruptions",
@@ -20,6 +24,7 @@ setuptools.setup(
           'scikit-image >= 0.15',
           'opencv-python >= 3.4.5',
           'scipy >= 1.2.1',
+          'numba >= 0.53.0'
       ],
       include_package_data=True,
     classifiers=[
