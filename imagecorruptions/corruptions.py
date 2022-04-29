@@ -108,7 +108,7 @@ def getOptimalKernelWidth1D(radius, sigma):
     return radius * 2 + 1
 
 def gauss_function(x, mean, sigma):
-    return (np.exp(- x**2 / (2 * (sigma**2)))) / (np.sqrt(2 * np.pi) * sigma)
+    return (np.exp(- (x - mean)**2 / (2 * (sigma**2)))) / (np.sqrt(2 * np.pi) * sigma)
 
 def getMotionBlurKernel(width, sigma):
     k = gauss_function(np.arange(width), 0, sigma)
