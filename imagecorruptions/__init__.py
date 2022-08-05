@@ -1,18 +1,20 @@
 import numpy as np
 from PIL import Image
 from .corruptions import *
+import random 
+
 
 corruption_tuple = (gaussian_noise, shot_noise, impulse_noise, defocus_blur,
-                    glass_blur, motion_blur, zoom_blur, snow, frost, fog,
-                    brightness, contrast, elastic_transform, pixelate,
-                    jpeg_compression, speckle_noise, gaussian_blur, spatter,
-                    saturate)
+                    glass_blur, motion_blur, frost, fog,
+                    brightness, contrast, pixelate,
+                    jpeg_compression, speckle_noise, gaussian_blur,
+                    saturate,blackout,postcontrast)
 
 corruption_dict = {corr_func.__name__: corr_func for corr_func in
                    corruption_tuple}
 
 
-def corrupt(image, severity=1, corruption_name=None, corruption_number=-1):
+def corrupt(image, severity=1, corruption_name=None, corruption_number=-1,v=1):
     """This function returns a corrupted version of the given image.
     
     Args:
@@ -54,8 +56,8 @@ def corrupt(image, severity=1, corruption_name=None, corruption_number=-1):
     if channels == 1:
         image = np.stack((np.squeeze(image),)*3, axis=-1)
     
-    if not severity in [1,2,3,4,5]:
-        raise AttributeError('Severity must be an integer in [1, 5]')
+    if not severity in [1,2,3,4,5,6,7,8,9,10]:
+        raise AttributeError('Severity must be an integer in [1, 10]')
     
     if not (corruption_name is None):
         image_corrupted = corruption_dict[corruption_name](Image.fromarray(image),
@@ -67,10 +69,13 @@ def corrupt(image, severity=1, corruption_name=None, corruption_number=-1):
         raise ValueError("Either corruption_name or corruption_number must be passed")
 
     return np.uint8(image_corrupted)
+    
+
+
 
 def get_corruption_names(subset='common'):
     if subset == 'common':
-        return [f.__name__ for f in corruption_tuple[:15]]
+        return [f.__name__ for f in corruption_tuple[:15]] 
     elif subset == 'validation':
         return [f.__name__ for f in corruption_tuple[15:]]
     elif subset == 'all':
@@ -80,8 +85,13 @@ def get_corruption_names(subset='common'):
     elif subset == 'blur':
         return [f.__name__ for f in corruption_tuple[3:7]]
     elif subset == 'weather':
-        return [f.__name__ for f in corruption_tuple[7:11]]
+        return [f.__name__ for f in corruption_tuple[6:9]]
     elif subset == 'digital':
         return [f.__name__ for f in corruption_tuple[11:15]]
+    elif subset == 'kontrol':
+        return [f.__name__ for f in corruption_tuple[18:]]
+    elif subset =="random":
+        corndb = random.randint(1,17)
+        return [f.__name__ for f in corruption_tuple[corndb-1:corndb]]
     else:
         raise ValueError("subset must be one of ['common', 'validation', 'all']")

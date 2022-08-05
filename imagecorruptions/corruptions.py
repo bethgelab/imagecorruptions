@@ -15,7 +15,6 @@ from scipy.ndimage.interpolation import map_coordinates
 import warnings
 import os
 from pkg_resources import resource_filename
-from numba import njit, prange
 
 
 
@@ -108,7 +107,7 @@ def getOptimalKernelWidth1D(radius, sigma):
     return radius * 2 + 1
 
 def gauss_function(x, mean, sigma):
-    return (np.exp(- (x - mean)**2 / (2 * (sigma**2)))) / (np.sqrt(2 * np.pi) * sigma)
+    return (np.exp(- x**2 / (2 * (sigma**2)))) / (np.sqrt(2 * np.pi) * sigma)
 
 def getMotionBlurKernel(width, sigma):
     k = gauss_function(np.arange(width), 0, sigma)
@@ -150,77 +149,105 @@ def _motion_blur(x, radius, sigma, angle):
         blurred = blurred + kernel[i] * shifted
     return blurred
 
-# Numba nopython compilation to shuffle_pixles
-@njit()
-def _shuffle_pixels_njit_glass_blur(d0,d1,x,c):
-
-    # locally shuffle pixels
-    for i in range(c[2]):
-        for h in range(d0 - c[1], c[1], -1):
-            for w in range(d1 - c[1], c[1], -1):
-                dx, dy = np.random.randint(-c[1], c[1], size=(2,))
-                h_prime, w_prime = h + dy, w + dx
-                # swap
-                x[h, w], x[h_prime, w_prime] = x[h_prime, w_prime], x[h, w]
-    return x
-
 # /////////////// End Corruption Helpers ///////////////
 
 
 # /////////////// Corruptions ///////////////
 
 def gaussian_noise(x, severity=1):
-    c = [.08, .12, 0.18, 0.26, 0.38][severity - 1]
-
     x = np.array(x) / 255.
+    a = x.shape[0]
+    if a < 350:
+        c = np.linspace(0.01, 0.2, 10)[severity - 1]
+    else:
+        c = np.linspace(0.1, 0.6, 10)[severity - 1]
     return np.clip(x + np.random.normal(size=x.shape, scale=c), 0, 1) * 255
+    
 
 
 def shot_noise(x, severity=1):
-    c = [60, 25, 12, 5, 3][severity - 1]
 
     x = np.array(x) / 255.
+    a = x.shape[0]
+    if a < 350:
+        c = np.linspace(70, 14, 10)[severity - 1]
+    else:
+        c = np.linspace(10, 1.4, 10)[severity - 1]
     return np.clip(np.random.poisson(x * c) / float(c), 0, 1) * 255
 
 
 def impulse_noise(x, severity=1):
-    c = [.03, .06, .09, 0.17, 0.27][severity - 1]
+    x = np.array(x) / 255.
+    a = x.shape[0]
+    if a < 350:
+        c = np.linspace(0.01, 0.071, 10)[severity - 1]
+    else:
+        c = np.linspace(0.1, 0.4, 10)[severity - 1]
 
-    x = sk.util.random_noise(np.array(x) / 255., mode='s&p', amount=c)
+    x = sk.util.random_noise(x, mode='s&p', amount=c)
     return np.clip(x, 0, 1) * 255
 
 
 def speckle_noise(x, severity=1):
-    c = [.15, .2, 0.35, 0.45, 0.6][severity - 1]
 
     x = np.array(x) / 255.
+    a = x.shape[0]
+    if a < 350:
+        c = np.linspace(0.11, 0.44, 10)[severity - 1]
+    else:
+        c = np.linspace(0.1, 1.101, 10)[severity - 1]
+
     return np.clip(x + x * np.random.normal(size=x.shape, scale=c), 0, 1) * 255
 
 
 def gaussian_blur(x, severity=1):
-    c = [1, 2, 3, 4, 6][severity - 1]
-
-    x = gaussian(np.array(x) / 255., sigma=c, multichannel=True)
+    x =np.array(x) / 255.
+    a = x.shape[0]
+    if a < 350:
+        c = np.linspace(0.2, 1.2, 10)[severity - 1]
+    else:
+        c = np.linspace(0.4, 4.5, 10)[severity - 1]
+    x = gaussian(x, sigma=c, multichannel=True)
     return np.clip(x, 0, 1) * 255
 
 
 def glass_blur(x, severity=1):
     # sigma, max_delta, iterations
-    c = [(0.7, 1, 2), (0.9, 2, 1), (1, 2, 3), (1.1, 3, 2), (1.5, 4, 2)][
+    a = np.array(x)
+    a =  a.shape[0]
+    if a < 350:
+        c = [(0.5, 1, 1), (0.5, 1, 2), (0.5, 1, 3), (0.5, 1, 4), (0.5, 1, 5),(0.5, 2, 1), (0.66, 2, 1), (0.77, 2, 1), (1, 2, 2), (1, 2, 2)][
         severity - 1]
+    else :
+        c = [(1, 2, 2), (1, 2, 3), (1, 2, 4), (1, 2, 5), (1, 2, 6),(1, 3, 2), (1.5, 3, 2), (2, 3, 2), (2.2, 3, 3), (2.4, 3, 4)][
+        severity - 1]
+
 
     x = np.uint8(
         gaussian(np.array(x) / 255., sigma=c[0], multichannel=True) * 255)
+    x_shape = np.array(x).shape
 
-    x = _shuffle_pixels_njit_glass_blur(np.array(x).shape[0],np.array(x).shape[1],x,c)
+    # locally shuffle pixels
+    for i in range(c[2]):
+        for h in range(x_shape[0] - c[1], c[1], -1):
+            for w in range(x_shape[1] - c[1], c[1], -1):
+                dx, dy = np.random.randint(-c[1], c[1], size=(2,))
+                h_prime, w_prime = h + dy, w + dx
+                # swap
+                x[h, w], x[h_prime, w_prime] = x[h_prime, w_prime], x[h, w]
 
     return np.clip(gaussian(x / 255., sigma=c[0], multichannel=True), 0,
                    1) * 255
 
-def defocus_blur(x, severity=1):
-    c = [(3, 0.1), (4, 0.5), (6, 0.5), (8, 0.5), (10, 0.5)][severity - 1]
 
+def defocus_blur(x, severity=1):
+    
     x = np.array(x) / 255.
+    a = x.shape[0]
+    if a < 350:
+       c = [(1.3, 0.133), (1.5, 0.155), (1.75, 0.175), (2, 0.2), (2.25, .225),(2.5, 0.255), (2.7, 0.275), (2.88, 0.29), (3, 0.31), (3.3, 0.33)][severity - 1]
+    else:
+       c = [(5.25, 1), (5.5, 1.5), (5.75, 2), (6, 2.5), (6.2, 3),(6.4, 3.5), (6.6, 4), (6.8, 4.5), (7, 5), (7.5, 5.5)][severity - 1]
     kernel = disk(radius=c[0], alias_blur=c[1])
 
     channels = []
@@ -236,8 +263,12 @@ def defocus_blur(x, severity=1):
 
 def motion_blur(x, severity=1):
     shape = np.array(x).shape
-    c = [(10, 3), (15, 5), (15, 8), (15, 12), (20, 15)][severity - 1]
     x = np.array(x)
+    a = x.shape[0]
+    if a < 350:
+       c = [(8, 3), (9, 4), (10, 5), (11, 6), (12, 7),(13, 8), (14, 9), (15, 9), (16, 8), (18, 8)][severity - 1]
+    else:
+       c = [(20, 10), (24, 12), (28, 14), (32, 16), (34, 17),(36, 18), (38, 19), (40, 20), (42, 21), (44, 22)][severity - 1]
 
     angle = np.random.uniform(-45, 45)
     x = _motion_blur(x, radius=c[0], sigma=c[1], angle=angle)
@@ -289,7 +320,7 @@ def next_power_of_2(x):
 
 
 def fog(x, severity=1):
-    c = [(1.5, 2), (2., 2), (2.5, 1.7), (2.5, 1.5), (3., 1.4)][severity - 1]
+    c = [(0.2, 5), (0.3, 4.8), (0.4, 4.6), (0.44, 4.4), (0.48, 4.2),(0.52, 4), (0.55, 3.8), (0.60, 3.6), (0.66, 3.4), (0.7, 3.2)][severity - 1]
 
     shape = np.array(x).shape
     max_side = np.max(shape)
@@ -310,11 +341,7 @@ def fog(x, severity=1):
 
 
 def frost(x, severity=1):
-    c = [(1, 0.4),
-         (0.8, 0.6),
-         (0.7, 0.7),
-         (0.65, 0.7),
-         (0.6, 0.75)][severity - 1]
+    c = [(1, 0.1), (1, 0.15), (0.8, 0.22), (0.7, 0.25), (0.66, .30),(0.65, 0.32), (0.64, 0.34), (0.63, 0.36), (0.62, 0.38), (0.61, 0.4)][severity - 1]
 
     idx = np.random.randint(5)
     filename = [resource_filename(__name__, './frost/frost1.png'),
@@ -325,6 +352,7 @@ def frost(x, severity=1):
                 resource_filename(__name__, './frost/frost6.jpg')][idx]
     frost = cv2.imread(filename)
     frost_shape = frost.shape
+    
     x_shape = np.array(x).shape
 
     # resize the frost image so it fits to the image dimensions
@@ -478,15 +506,38 @@ def spatter(x, severity=1):
 
 
 def contrast(x, severity=1):
-    c = [0.4, .3, .2, .1, .05][severity - 1]
+    c = np.linspace(0.9, 0.2, 10)[severity - 1]
 
     x = np.array(x) / 255.
     means = np.mean(x, axis=(0, 1), keepdims=True)
     return np.clip((x - means) * c + means, 0, 1) * 255
 
 
+def postcontrast(x, severity=1):
+    c = np.linspace(1.2, 6, 10)[severity - 1]
+
+    x = np.array(x) / 255.
+    means = np.mean(x, axis=(0, 1), keepdims=True)
+    return np.clip((x - means) * c + means, 0, 1) * 255
+
 def brightness(x, severity=1):
-    c = [.1, .2, .3, .4, .5][severity - 1]
+
+    c = np.linspace(0.98, .58, 10)[severity - 1]
+
+    x = np.array(x) / 255.
+
+    if len(x.shape) < 3 or x.shape[2] < 3:
+        x = np.clip(x + c, 0, 1)
+    else:
+        x = sk.color.rgb2hsv(x)
+        x[:, :, 2] = np.clip(x[:, :, 2] + c, 0, 1)
+        x = sk.color.hsv2rgb(x)
+
+    return np.clip(x, 0, 1) * 255
+
+
+def blackout (x, severity=1):
+    c = np.linspace(-0.12, -.28, 10)[severity - 1]
 
     x = np.array(x) / 255.
 
@@ -501,7 +552,8 @@ def brightness(x, severity=1):
 
 
 def saturate(x, severity=1):
-    c = [(0.3, 0), (0.1, 0), (2, 0), (5, 0.1), (20, 0.2)][severity - 1]
+
+    c = [(0.088, 0), (0.15, 0), (0.25, 0), (0.5, 0), (0.85, 0),(1.5, 0.1), (1.9, 0.12), (2, 0.13), (2, 0.14), (2.5, 0.15)][severity - 1]
 
     x = np.array(x) / 255.
 
@@ -518,9 +570,14 @@ def saturate(x, severity=1):
     return np.clip(x, 0, 1) * 255
 
 
-def jpeg_compression(x, severity=1):
-    c = [25, 18, 15, 10, 7][severity - 1]
 
+def jpeg_compression(x, severity=1):
+    z =np.array(x) / 255.
+    a = z.shape[0]
+    if a < 350:
+        c = [42, 38, 30, 25, 20, 18, 15, 10, 7, 5][severity - 1]
+    else:
+        c = [12, 10, 8, 7, 6, 5, 4, 3, 2, 1][severity - 1]
     output = BytesIO()
     gray_scale = False
     if x.mode != 'RGB':
@@ -535,9 +592,15 @@ def jpeg_compression(x, severity=1):
 
 
 def pixelate(x, severity=1):
-    c = [0.6, 0.5, 0.4, 0.3, 0.25][severity - 1]
-
     x_shape = np.array(x).shape
+    a = np.array(x)
+    a = a.shape[0]
+
+    if a < 350:
+       c = np.linspace(0.7, .28, 10)[severity - 1]
+    else:
+       c = np.linspace(0.2, .09,  10)[severity - 1]
+
 
     x = x.resize((int(x_shape[1] * c), int(x_shape[0] * c)), Image.BOX)
 
