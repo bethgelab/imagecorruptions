@@ -284,6 +284,9 @@ def motion_blur(x, severity=1):
 
 
 def zoom_blur(x, severity=1):
+    if severity >= 5:
+        severity = 5
+
     c = [np.arange(1, 1.11, 0.01),
          np.arange(1, 1.16, 0.01),
          np.arange(1, 1.21, 0.02),
@@ -394,6 +397,9 @@ def rgb2gray(rgb):
 
 
 def snow(x, severity=1):
+    if severity >= 5:
+        severity = 5
+
     c = [(0.1, 0.3, 3, 0.5, 10, 4, 0.8),
          (0.2, 0.3, 2, 0.5, 12, 4, 0.7),
          (0.55, 0.3, 4, 0.9, 12, 8, 0.7),
@@ -437,6 +443,9 @@ def snow(x, severity=1):
 
 
 def spatter(x, severity=1):
+    if severity >= 5:
+        severity = 5
+    
     c = [(0.65, 0.3, 4, 0.69, 0.6, 0),
          (0.65, 0.3, 3, 0.68, 0.6, 0),
          (0.65, 0.3, 2, 0.68, 0.5, 0),
@@ -522,7 +531,7 @@ def postcontrast(x, severity=1):
 
 def brightness(x, severity=1):
 
-    c = np.linspace(0.98, .58, 10)[severity - 1]
+    c = np.linspace(0.1, .58, 10)[severity - 1]
 
     x = np.array(x) / 255.
 
@@ -553,7 +562,7 @@ def blackout (x, severity=1):
 
 def saturate(x, severity=1):
 
-    c = [(0.088, 0), (0.15, 0), (0.25, 0), (0.5, 0), (0.85, 0),(1.5, 0.1), (1.9, 0.12), (2, 0.13), (2, 0.14), (2.5, 0.15)][severity - 1]
+    c = [(0.088, 0), (0.4, 0.02), (0.5, 0.04), (0.7, 0.08), (0.85, 0.088),(1.2, 0.1), (1.7, 0.12), (2, 0.13), (2, 0.14), (2.5, 0.15)][severity - 1]
 
     x = np.array(x) / 255.
 
@@ -611,6 +620,8 @@ def pixelate(x, severity=1):
 
 # mod of https://gist.github.com/erniejunior/601cdf56d2b424757de5
 def elastic_transform(image, severity=1):
+    if severity >= 5:
+        severity = 5
     image = np.array(image, dtype=np.float32) / 255.
     shape = image.shape
     shape_size = shape[:2]

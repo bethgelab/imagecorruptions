@@ -5,16 +5,27 @@ import random
 
 
 corruption_tuple = (gaussian_noise, shot_noise, impulse_noise, defocus_blur,
+                    glass_blur, motion_blur, zoom_blur, snow, frost, fog,
+                    brightness, contrast, elastic_transform, pixelate,
+                    jpeg_compression, speckle_noise, gaussian_blur, spatter,
+                    saturate)
+
+robustness_tuple = (gaussian_noise, shot_noise, impulse_noise, defocus_blur,
                     glass_blur, motion_blur, frost, fog,
                     brightness, contrast, pixelate,
                     jpeg_compression, speckle_noise, gaussian_blur,
                     saturate,blackout,postcontrast)
 
+
 corruption_dict = {corr_func.__name__: corr_func for corr_func in
                    corruption_tuple}
 
+robustness_dict = {rob_func.__name__: rob_func for rob_func in robustness_tuple}
 
-def corrupt(image, severity=1, corruption_name=None, corruption_number=-1,v=1):
+
+
+
+def corrupt(image, severity=1, corruption_name=None, corruption_number=-1):
     """This function returns a corrupted version of the given image.
     
     Args:
@@ -22,7 +33,7 @@ def corrupt(image, severity=1, corruption_name=None, corruption_number=-1,v=1):
                                     expected shape is either (height x width x channels) or (height x width); 
                                     width and height must be at least 32 pixels;
                                     channels must be 1 or 3;
-        severity (int):             strength with which to corrupt the image; an integer in [1, 5]
+        severity (int):             strength with which to corrupt the image; an integer in [1, 10]
         corruption_name (str):      specifies which corruption function to call, must be one of
                                         'gaussian_noise', 'shot_noise', 'impulse_noise', 'defocus_blur',
                                         'glass_blur', 'motion_blur', 'zoom_blur', 'snow', 'frost', 'fog',
@@ -60,8 +71,10 @@ def corrupt(image, severity=1, corruption_name=None, corruption_number=-1,v=1):
         raise AttributeError('Severity must be an integer in [1, 10]')
     
     if not (corruption_name is None):
-        image_corrupted = corruption_dict[corruption_name](Image.fromarray(image),
-                                                       severity)
+        try:
+            image_corrupted = corruption_dict[corruption_name](Image.fromarray(image),severity)
+        except:
+            image_corrupted = robustness_dict[corruption_name](Image.fromarray(image),severity)
     elif corruption_number != -1:
         image_corrupted = corruption_tuple[corruption_number](Image.fromarray(image),
                                                           severity)
@@ -78,8 +91,8 @@ def get_corruption_names(subset='common'):
         return [f.__name__ for f in corruption_tuple[:15]] 
     elif subset == 'validation':
         return [f.__name__ for f in corruption_tuple[15:]]
-    elif subset == 'all':
-        return [f.__name__ for f in corruption_tuple]
+    elif subset == 'all_corr':
+        return [f.__name__ for f in corruption_tuple[:]]
     elif subset == 'noise':
         return [f.__name__ for f in corruption_tuple[0:3]]
     elif subset == 'blur':
@@ -88,10 +101,13 @@ def get_corruption_names(subset='common'):
         return [f.__name__ for f in corruption_tuple[6:9]]
     elif subset == 'digital':
         return [f.__name__ for f in corruption_tuple[11:15]]
-    elif subset == 'kontrol':
-        return [f.__name__ for f in corruption_tuple[18:]]
-    elif subset =="random":
-        corndb = random.randint(1,17)
+    elif subset == 'random_corr':
+        corndb = random.randint(1,18)
         return [f.__name__ for f in corruption_tuple[corndb-1:corndb]]
+    elif subset =="random_robust":
+        rorndb = random.randint(1,17)
+        return [f.__name__ for f in robustness_tuple[rorndb-1:rorndb]]
+    elif subset == "all_robust":
+        return [f.__name__ for f in robustness_tuple[:]]
     else:
-        raise ValueError("subset must be one of ['common', 'validation', 'all']")
+        raise ValueError("subset must be one of ['common', 'validation', 'all_robust', 'all_corr', 'noise', 'blur', 'weather', 'digital', 'random_corr', 'random_robust']")
