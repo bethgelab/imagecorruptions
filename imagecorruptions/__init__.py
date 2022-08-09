@@ -102,7 +102,7 @@ def get_corruption_names(subset='common'):
     elif subset == 'digital':
         return [f.__name__ for f in corruption_tuple[11:15]]
     elif subset == 'random_corr':
-        corndb = random.randint(1,18)
+        corndb = random.randint(1,19)
         return [f.__name__ for f in corruption_tuple[corndb-1:corndb]]
     elif subset =="random_robust":
         rorndb = random.randint(1,17)
