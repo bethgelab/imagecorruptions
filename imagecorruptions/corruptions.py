@@ -12,11 +12,8 @@ from io import BytesIO
 import cv2
 from scipy.ndimage import zoom as scizoom
 from scipy.ndimage.interpolation import map_coordinates
-import warnings
-import os
 from pkg_resources import resource_filename
-from numba import njit, prange
-
+from numba import njit
 
 
 def disk(radius, alias_blur=0.1, dtype=np.float32):
@@ -32,8 +29,6 @@ def disk(radius, alias_blur=0.1, dtype=np.float32):
 
     # supersample disk to antialias
     return cv2.GaussianBlur(aliased_disk, ksize=ksize, sigmaX=alias_blur)
-
-
 
 
 # modification of https://github.com/FLHerne/mapgen/blob/master/diamondsquare.py
@@ -60,25 +55,25 @@ def plasma_fractal(mapsize=256, wibbledecay=3):
         squareaccum = cornerref + np.roll(cornerref, shift=-1, axis=0)
         squareaccum += np.roll(squareaccum, shift=-1, axis=1)
         maparray[stepsize // 2:mapsize:stepsize,
-        stepsize // 2:mapsize:stepsize] = wibbledmean(squareaccum)
+                 stepsize // 2:mapsize:stepsize] = wibbledmean(squareaccum)
 
     def filldiamonds():
         """For each diamond of points stepsize apart,
            calculate middle value as mean of points + wibble"""
         mapsize = maparray.shape[0]
         drgrid = maparray[stepsize // 2:mapsize:stepsize,
-                 stepsize // 2:mapsize:stepsize]
+                          stepsize // 2:mapsize:stepsize]
         ulgrid = maparray[0:mapsize:stepsize, 0:mapsize:stepsize]
         ldrsum = drgrid + np.roll(drgrid, 1, axis=0)
         lulsum = ulgrid + np.roll(ulgrid, -1, axis=1)
         ltsum = ldrsum + lulsum
         maparray[0:mapsize:stepsize,
-        stepsize // 2:mapsize:stepsize] = wibbledmean(ltsum)
+                 stepsize // 2:mapsize:stepsize] = wibbledmean(ltsum)
         tdrsum = drgrid + np.roll(drgrid, 1, axis=1)
         tulsum = ulgrid + np.roll(ulgrid, -1, axis=0)
         ttsum = tdrsum + tulsum
         maparray[stepsize // 2:mapsize:stepsize,
-        0:mapsize:stepsize] = wibbledmean(ttsum)
+                 0:mapsize:stepsize] = wibbledmean(ttsum)
 
     while stepsize >= 2:
         fillsquares()
@@ -104,34 +99,39 @@ def clipped_zoom(img, zoom_factor):
 
     return img
 
+
 def getOptimalKernelWidth1D(radius, sigma):
     return radius * 2 + 1
 
+
 def gauss_function(x, mean, sigma):
     return (np.exp(- (x - mean)**2 / (2 * (sigma**2)))) / (np.sqrt(2 * np.pi) * sigma)
+
 
 def getMotionBlurKernel(width, sigma):
     k = gauss_function(np.arange(width), 0, sigma)
     Z = np.sum(k)
     return k/Z
 
+
 def shift(image, dx, dy):
-    if(dx < 0):
+    if (dx < 0):
         shifted = np.roll(image, shift=image.shape[1]+dx, axis=1)
-        shifted[:,dx:] = shifted[:,dx-1:dx]
-    elif(dx > 0):
+        shifted[:, dx:] = shifted[:, dx-1:dx]
+    elif (dx > 0):
         shifted = np.roll(image, shift=dx, axis=1)
-        shifted[:,:dx] = shifted[:,dx:dx+1]
+        shifted[:, :dx] = shifted[:, dx:dx+1]
     else:
         shifted = image
 
-    if(dy < 0):
+    if (dy < 0):
         shifted = np.roll(shifted, shift=image.shape[0]+dy, axis=0)
-        shifted[dy:,:] = shifted[dy-1:dy,:]
-    elif(dy > 0):
+        shifted[dy:, :] = shifted[dy-1:dy, :]
+    elif (dy > 0):
         shifted = np.roll(shifted, shift=dy, axis=0)
-        shifted[:dy,:] = shifted[dy:dy+1,:]
+        shifted[:dy, :] = shifted[dy:dy+1, :]
     return shifted
+
 
 def _motion_blur(x, radius, sigma, angle):
     width = getOptimalKernelWidth1D(radius, sigma)
@@ -151,8 +151,10 @@ def _motion_blur(x, radius, sigma, angle):
     return blurred
 
 # Numba nopython compilation to shuffle_pixles
+
+
 @njit()
-def _shuffle_pixels_njit_glass_blur(d0,d1,x,c):
+def _shuffle_pixels_njit_glass_blur(d0, d1, x, c):
 
     # locally shuffle pixels
     for i in range(c[2]):
@@ -212,10 +214,11 @@ def glass_blur(x, severity=1):
     x = np.uint8(
         gaussian(np.array(x) / 255., sigma=c[0], channel_axis=-1) * 255)
 
-    x = _shuffle_pixels_njit_glass_blur(np.array(x).shape[0],np.array(x).shape[1],x,c)
+    x = _shuffle_pixels_njit_glass_blur(np.array(x).shape[0], np.array(x).shape[1], x, c)
 
     return np.clip(gaussian(x / 255., sigma=c[0], channel_axis=-1), 0,
                    1) * 255
+
 
 def defocus_blur(x, severity=1):
     c = [(3, 0.1), (4, 0.5), (6, 0.5), (8, 0.5), (10, 0.5)][severity - 1]
@@ -244,7 +247,7 @@ def motion_blur(x, severity=1):
 
     if len(x.shape) < 3 or x.shape[2] < 3:
         gray = np.clip(np.array(x).transpose((0, 1)), 0, 255)
-        if len(shape) >= 3 or shape[2] >=3:
+        if len(shape) >= 3 or shape[2] >= 3:
             return np.stack([gray, gray, gray], axis=2)
         else:
             return gray
@@ -301,11 +304,11 @@ def fog(x, severity=1):
     x_shape = np.array(x).shape
     if len(x_shape) < 3 or x_shape[2] < 3:
         x += c[0] * plasma_fractal(mapsize=map_size, wibbledecay=c[1])[
-                    :shape[0], :shape[1]]
+            :shape[0], :shape[1]]
     else:
         x += c[0] * \
-             plasma_fractal(mapsize=map_size, wibbledecay=c[1])[:shape[0],
-             :shape[1]][..., np.newaxis]
+            plasma_fractal(mapsize=map_size, wibbledecay=c[1])[:shape[0],
+                                                               :shape[1]][..., np.newaxis]
     return np.clip(x * max_val / (max_val + c[0]), 0, 1) * 255
 
 
@@ -336,7 +339,7 @@ def frost(x, severity=1):
     elif frost_shape[0] >= x_shape[0] and frost_shape[1] < x_shape[1]:
         scaling_factor = x_shape[1] / frost_shape[1]
     elif frost_shape[0] < x_shape[0] and frost_shape[1] < x_shape[
-        1]:  # If both dims are too small, pick the bigger scaling factor
+            1]:  # If both dims are too small, pick the bigger scaling factor
         scaling_factor_0 = x_shape[0] / frost_shape[0]
         scaling_factor_1 = x_shape[1] / frost_shape[1]
         scaling_factor = np.maximum(scaling_factor_0, scaling_factor_1)
@@ -353,11 +356,11 @@ def frost(x, severity=1):
 
     if len(x_shape) < 3 or x_shape[2] < 3:
         frost_rescaled = frost_rescaled[x_start:x_start + x_shape[0],
-                         y_start:y_start + x_shape[1]]
+                                        y_start:y_start + x_shape[1]]
         frost_rescaled = rgb2gray(frost_rescaled)
     else:
         frost_rescaled = frost_rescaled[x_start:x_start + x_shape[0],
-                         y_start:y_start + x_shape[1]][..., [2, 1, 0]]
+                                        y_start:y_start + x_shape[1]][..., [2, 1, 0]]
     return np.clip(c[0] * np.array(x) + c[1] * frost_rescaled, 0, 255)
 
 
@@ -380,7 +383,6 @@ def snow(x, severity=1):
     snow_layer[snow_layer < c[3]] = 0
 
     snow_layer = np.clip(snow_layer.squeeze(), 0, 1)
-
 
     snow_layer = _motion_blur(snow_layer, radius=c[4], sigma=c[5], angle=np.random.uniform(-135, -45))
 
@@ -405,7 +407,6 @@ def snow(x, severity=1):
         x[:snow_layer.shape[0], :snow_layer.shape[1]] += snow_layer + np.rot90(
             snow_layer, k=2)
         return np.clip(x, 0, 1) * 255
-
 
 
 def spatter(x, severity=1):
