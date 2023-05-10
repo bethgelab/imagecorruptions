@@ -85,4 +85,4 @@ def get_corruption_names(subset='common'):
     elif subset == 'digital':
         return [f.__name__ for f in corruption_tuple[11:15]]
     else:
-        raise ValueError("subset must be one of ['common', 'validation', 'all']")
+        raise ValueError("subset must be one of ['common', 'validation', 'noise', 'blur', 'weather', 'digital', 'all']")
