@@ -214,8 +214,8 @@ def glass_blur(x, severity=1):
 
     x = _shuffle_pixels_njit_glass_blur(np.array(x).shape[0],np.array(x).shape[1],x,c)
 
-    return np.clip(gaussian(x / 255., sigma=c[0], multichannel=True), 0,
-                   1) * 255
+    return np.clip(gaussian(x / 255., sigma=c[0]), 0,
+                   1) * 255 
 
 def defocus_blur(x, severity=1):
     c = [(3, 0.1), (4, 0.5), (6, 0.5), (8, 0.5), (10, 0.5)][severity - 1]
