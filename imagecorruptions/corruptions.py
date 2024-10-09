@@ -200,7 +200,7 @@ def speckle_noise(x, severity=1):
 def gaussian_blur(x, severity=1):
     c = [1, 2, 3, 4, 6][severity - 1]
 
-    x = gaussian(np.array(x) / 255., sigma=c, multichannel=True)
+    x = gaussian(np.array(x) / 255., sigma=c)
     return np.clip(x, 0, 1) * 255
 
 
@@ -210,11 +210,11 @@ def glass_blur(x, severity=1):
         severity - 1]
 
     x = np.uint8(
-        gaussian(np.array(x) / 255., sigma=c[0], multichannel=True) * 255)
+        gaussian(np.array(x) / 255., sigma=c[0]) * 255)
 
     x = _shuffle_pixels_njit_glass_blur(np.array(x).shape[0],np.array(x).shape[1],x,c)
 
-    return np.clip(gaussian(x / 255., sigma=c[0], multichannel=True), 0,
+    return np.clip(gaussian(x / 255., sigma=c[0]), 0,
                    1) * 255
 
 def defocus_blur(x, severity=1):
