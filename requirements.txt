@@ -4,3 +4,6 @@ scikit-image >= 0.15
 opencv-python >= 3.4.5
 scipy >= 1.2.1
 numba >= 0.53.0
+tqdm >= 4.0.0
+matplotlib >= 3.6.0
+filetype >= 1.1.0
