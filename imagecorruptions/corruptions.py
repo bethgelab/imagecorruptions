@@ -155,7 +155,9 @@ def _motion_blur(x, radius, sigma, angle):
 
 
 @njit()
-def _shuffle_pixels_njit_glass_blur(d0, d1, x, c):
+def _shuffle_pixels_njit_glass_blur(d0, d1, x, c, seed=None):
+
+    np.random.seed(seed)
 
     # locally shuffle pixels
     for i in range(c[2]):
@@ -211,7 +213,7 @@ def gaussian_blur(x, severity=1):
     x = gaussian(np.array(x) / 255., sigma=c, **kwargs)
     return np.clip(x, 0, 1) * 255
 
-def glass_blur(x, severity=1):
+def glass_blur(x, severity=1, seed=None):
     # sigma, max_delta, iterations
     c = [(0.7, 1, 2), (0.9, 2, 1), (1, 2, 3), (1.1, 3, 2), (1.5, 4, 2)][
         severity - 1]
@@ -224,7 +226,7 @@ def glass_blur(x, severity=1):
     x = np.uint8(
         gaussian(np.array(x) / 255., sigma=c[0], **kwargs) * 255)
 
-    x = _shuffle_pixels_njit_glass_blur(np.array(x).shape[0], np.array(x).shape[1], x, c)
+    x = _shuffle_pixels_njit_glass_blur(np.array(x).shape[0], np.array(x).shape[1], x, c, seed)
 
     return np.clip(gaussian(x / 255., sigma=c[0], **kwargs), 0,
                    1) * 255
