@@ -186,7 +186,7 @@ def shot_noise(x, severity=1):
     return np.clip(np.random.poisson(x * c) / float(c), 0, 1) * 255
 
 
-def impulse_noise(x, severity=1):
+def impulse_noise(x, severity=1, seed=None):
     c = [.03, .06, .09, 0.17, 0.27][severity - 1]
     mode = 's&p'
     x = sk.util.random_noise(np.array(x) / 255., 's&p', seed, amount=c)
