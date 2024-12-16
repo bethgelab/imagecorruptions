@@ -1,9 +1,12 @@
 # -*- coding: utf-8 -*-
 
 try:
+    import os.path as path
     from importlib.resources import files
+    def resource_filename(anchor, resources):
+        return path.join(files(anchor), resources)
 except ImportError:
-    from pkg_resources import resource_filename as files
+    from pkg_resources import resource_filename
 
 import numpy as np
 import math
@@ -346,7 +349,7 @@ def frost(x, severity=1):
         './frost/frost6.jpg'
     ]
     
-    file_path = files(__name__, filenames[idx])
+    file_path = resource_filename(__name__, filenames[idx])
     frost = cv2.imread(file_path)
     frost_shape = frost.shape
     x_shape = np.array(x).shape
