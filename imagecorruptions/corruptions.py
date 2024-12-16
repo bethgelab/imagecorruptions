@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 
+import os.path as path
+from importlib.resources import files
+
 import numpy as np
 import math
 from PIL import Image
@@ -12,7 +15,6 @@ from io import BytesIO
 import cv2
 from scipy.ndimage import zoom as scizoom
 from scipy.ndimage.interpolation import map_coordinates
-from pkg_resources import resource_filename
 from numba import njit
 
 SK_VERSION = {k:int(v) for k,v in zip(['major', 'minor'], sk.__version__.split('.')[:2])}
@@ -331,14 +333,19 @@ def frost(x, severity=1):
          (0.65, 0.7),
          (0.6, 0.75)][severity - 1]
 
-    idx = np.random.randint(5)
-    filename = [resource_filename(__name__, './frost/frost1.png'),
-                resource_filename(__name__, './frost/frost2.png'),
-                resource_filename(__name__, './frost/frost3.png'),
-                resource_filename(__name__, './frost/frost4.jpg'),
-                resource_filename(__name__, './frost/frost5.jpg'),
-                resource_filename(__name__, './frost/frost6.jpg')][idx]
-    frost = cv2.imread(filename)
+    idx = np.random.randint(6)
+
+    filenames = [
+        './frost/frost1.png',
+        './frost/frost2.png',
+        './frost/frost3.png', 
+        './frost/frost4.jpg',
+        './frost/frost5.jpg',
+        './frost/frost6.jpg'
+    ]
+    
+    file_path = path.join(files(__name__), filenames[idx])
+    frost = cv2.imread(file_path)
     frost_shape = frost.shape
     x_shape = np.array(x).shape
 
