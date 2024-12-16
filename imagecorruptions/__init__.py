@@ -12,7 +12,7 @@ corruption_dict = {corr_func.__name__: corr_func for corr_func in
                    corruption_tuple}
 
 
-def corrupt(image, severity=1, corruption_name=None, corruption_number=-1):
+def corrupt(image, severity=1, corruption_name=None, corruption_number=-1, **kwargs):
     """This function returns a corrupted version of the given image.
 
     Args:
@@ -59,10 +59,10 @@ def corrupt(image, severity=1, corruption_name=None, corruption_number=-1):
 
     if not (corruption_name is None):
         image_corrupted = corruption_dict[corruption_name](Image.fromarray(image),
-                                                           severity)
+                                                           severity, **kwargs)
     elif corruption_number != -1:
         image_corrupted = corruption_tuple[corruption_number](Image.fromarray(image),
-                                                              severity)
+                                                              severity, **kwargs)
     else:
         raise ValueError("Either corruption_name or corruption_number must be passed")
 

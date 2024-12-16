@@ -15,6 +15,7 @@ from scipy.ndimage.interpolation import map_coordinates
 from pkg_resources import resource_filename
 from numba import njit
 
+SK_VERSION = {k:int(v) for k,v in zip(['major', 'minor'], sk.__version__.split('.')[:2])}
 
 def disk(radius, alias_blur=0.1, dtype=np.float32):
     if radius <= 8:
@@ -154,7 +155,9 @@ def _motion_blur(x, radius, sigma, angle):
 
 
 @njit()
-def _shuffle_pixels_njit_glass_blur(d0, d1, x, c):
+def _shuffle_pixels_njit_glass_blur(d0, d1, x, c, seed=None):
+
+    np.random.seed(seed)
 
     # locally shuffle pixels
     for i in range(c[2]):
@@ -185,10 +188,10 @@ def shot_noise(x, severity=1):
     return np.clip(np.random.poisson(x * c) / float(c), 0, 1) * 255
 
 
-def impulse_noise(x, severity=1):
+def impulse_noise(x, severity=1, seed=None):
     c = [.03, .06, .09, 0.17, 0.27][severity - 1]
-
-    x = sk.util.random_noise(np.array(x) / 255., mode='s&p', amount=c)
+    mode = 's&p'
+    x = sk.util.random_noise(np.array(x) / 255., 's&p', seed, amount=c)
     return np.clip(x, 0, 1) * 255
 
 
@@ -202,21 +205,30 @@ def speckle_noise(x, severity=1):
 def gaussian_blur(x, severity=1):
     c = [1, 2, 3, 4, 6][severity - 1]
 
-    x = gaussian(np.array(x) / 255., sigma=c, channel_axis=-1)
+    if SK_VERSION['major'] >= 0 and SK_VERSION['minor'] >= 19:
+        kwargs = {'channel_axis': -1}
+    else: # pre scikit-image 0.19
+        kwargs = {'multichannel': True}
+
+    x = gaussian(np.array(x) / 255., sigma=c, **kwargs)
     return np.clip(x, 0, 1) * 255
 
-
-def glass_blur(x, severity=1):
+def glass_blur(x, severity=1, seed=None):
     # sigma, max_delta, iterations
     c = [(0.7, 1, 2), (0.9, 2, 1), (1, 2, 3), (1.1, 3, 2), (1.5, 4, 2)][
         severity - 1]
 
+    if SK_VERSION['major'] >= 0 and SK_VERSION['minor'] >= 19:
+        kwargs = {'channel_axis': -1}
+    else: # pre scikit-image 0.19
+        kwargs = {'multichannel': True}
+
     x = np.uint8(
-        gaussian(np.array(x) / 255., sigma=c[0], channel_axis=-1) * 255)
+        gaussian(np.array(x) / 255., sigma=c[0], **kwargs) * 255)
 
-    x = _shuffle_pixels_njit_glass_blur(np.array(x).shape[0], np.array(x).shape[1], x, c)
+    x = _shuffle_pixels_njit_glass_blur(np.array(x).shape[0], np.array(x).shape[1], x, c, seed)
 
-    return np.clip(gaussian(x / 255., sigma=c[0], channel_axis=-1), 0,
+    return np.clip(gaussian(x / 255., sigma=c[0], **kwargs), 0,
                    1) * 255
 
 
