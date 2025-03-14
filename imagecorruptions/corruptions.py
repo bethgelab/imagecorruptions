@@ -214,6 +214,9 @@ def gaussian_blur(x, severity=1):
     return np.clip(x, 0, 1) * 255
 
 def glass_blur(x, severity=1, seed=None):
+    if seed is None:
+        seed = np.random.default_rng().integers(np.iinfo(int).max)
+
     # sigma, max_delta, iterations
     c = [(0.7, 1, 2), (0.9, 2, 1), (1, 2, 3), (1.1, 3, 2), (1.5, 4, 2)][
         severity - 1]
