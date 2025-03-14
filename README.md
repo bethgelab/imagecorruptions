@@ -1,7 +1,7 @@
 # imagecorruptions
 This package provides a set of corruptions that can be applied to images in order to benchmark the robustness of neural networks. These corruptions are not meant to be used as training data augmentation but rather to test the networks against unseen perturbations. For more information have a look at the paper on the original corruption package by Hendrycks and Dietterich: [Benchmarking Neural Network Robustness to Common Corruptions and Surface Variations](https://arxiv.org/abs/1807.01697).
 
-![image corruptions](https://raw.githubusercontent.com/bethgelab/imagecorruptions/master/assets/corruptions_sev_3.png?token=ACY4L7YQWNOLTMRRO53U6FS5G3UF6)
+![image corruptions](https://raw.githubusercontent.com/bethgelab/imagecorruptions/e8f033db8c76539561c876fae62d196146b2ff30/assets/corruptions_sev_3.png)
 
 ## Installation and Usage
 This package is pip installable via `pip3 install imagecorruptions`. An example of how to use the corruption function is given below:
